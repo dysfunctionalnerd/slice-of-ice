@@ -4,7 +4,8 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - blackCollision
+  - IceBlock
+  - WallBlock
   layers:
   - Default
   - TransparentFX
@@ -12,9 +13,9 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
+  - Ice
+  - Wall
+  - Stop
   - 
   - 
   - 
