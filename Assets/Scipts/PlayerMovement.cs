@@ -1,39 +1,43 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
     public Vector2Int PlayerCoordinates;
-
-    RaycastHit2D hit;
-
     Rigidbody2D rigid;
-
-    public bool isPushable;
-
-    bool isMoving = true;
+    bool isMoving = false;
     
-
-    public HitDirectionPosition hitDirectionPosition;
+    public List<HitDirection> rayDirections;
+    public Vector3 newPosition;
+    public float speed;
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        SetCoordinateStart();
-       
-        rigid = GetComponent<Rigidbody2D>();
+        speed = .5f;
+        //SetCoordinateStart();
+
+        //rigid = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        //if (isMoving)
-        //{
-        //    Movement();
-        //    if (transform.position == TargetPosition)
-        //    {
-        //        isMoving = false;
-        //    }
-        //}
+        
+        if (isMoving)
+        {
+            Movement();
+            if (transform.position == newPosition)
+            {
+                isMoving = false;
+            }
+        }
+        else 
+        {
+            InputMovement();
+        }
+
     }
 
     private void FixedUpdate()
@@ -48,73 +52,110 @@ public class PlayerMovement : MonoBehaviour
 
     void Movement()
     {
+        transform.position = Vector3.MoveTowards(transform.position, newPosition, speed);
         
-
-       //transform.position = Vector3.Lerp(transform.position, TargetPosition, Time.deltaTime);
-
-       transform.position = Vector3.MoveTowards(transform.position, hitDirectionPosition.targetPosition, .7f);
-
-         
     }
 
     void CheckMovement() 
     {
-        hit = Physics2D.Raycast(transform.position, Vector3.up, 1000f);
-        
-        if (hit)
+        foreach (var rayDirection in rayDirections)
         {
-            hitDirectionPosition.targetPosition = hit.transform.position;
-            hitDirectionPosition.distance = Vector3.Distance(transform.position, hitDirectionPosition.targetPosition);
+            rayDirection.hit = Physics2D.Raycast(transform.position, rayDirection.direction, 1000f);
 
-            if (hit.collider.tag == ("IceBlock"))
+            if (rayDirection.hit)
             {
-                if (hitDirectionPosition.distance <= 2)
+                rayDirection.targetPosition = rayDirection.hit.transform.position;
+                rayDirection.distance = Vector3.Distance(transform.position, rayDirection.targetPosition);
+
+                rayDirection.canMove = true;
+
+                if (rayDirection.hit.collider.tag == "WallBlock" || rayDirection.hit.collider.tag == ("IceBlock")) 
                 {
-                    isPushable = true;
-                }
-                else
-                {
-                    isPushable = false;                
-                }
+                    if (rayDirection.distance == 1f)
+                    {
+                        rayDirection.canMove = false;
+
+                        if (rayDirection.hit.collider.tag == ("IceBlock"))
+                        {
+                            rayDirection.isPushable = true;
+                        }
+                        else
+                        {
+                            rayDirection.isPushable = false;
+                        }
+                    }    
+                }             
+            }
+        }
+    }
+
+    public void InputMovement()
+    {
+        foreach (var rayDirection in rayDirections)
+        {
+            if (rayDirection.canMove && Input.GetKeyDown(rayDirection.input))
+            {
+                newPosition = new Vector3(
+                    rayDirection.targetPosition.x - rayDirection.direction.x,
+                    rayDirection.targetPosition.y - rayDirection.direction.y,
+                    0
+                    );
+                isMoving = true;
             }
         }
     }
 
     private void OnDrawGizmos()
     {
-        hit = Physics2D.Raycast(transform.position, Vector3.up, 1000f);
-        Gizmos.color = Color.white;
-       
-        if (hit.collider == null)
+  
+        foreach (var rayDirection in rayDirections)
         {
-            Gizmos.DrawLine(transform.position, Vector3.up * 1000f);
-        }
-        else if (hit.collider != null)
-        {
-            if (hit.collider.tag == ("IceBlock"))
+
+            rayDirection.hit = Physics2D.Raycast(transform.position, rayDirection.direction, 1000f);
+
+            Gizmos.color = Color.white;
+            if (rayDirection.hit.collider == null)
             {
-                Gizmos.color = Color.blue;
-               
-                if (isPushable)
+                Gizmos.DrawLine(transform.position, rayDirection.direction * 1000f);
+                rayDirection.isHit = false;
+            }
+            else if (rayDirection.hit.collider != null)
+            {
+                if (rayDirection.hit.collider.tag == ("IceBlock"))
                 {
-                    Gizmos.color = Color.green;
+                    Gizmos.color = Color.blue;
+
+                    if (rayDirection.isPushable)
+                    {
+                        Gizmos.color = Color.green;
+                    }
+
                 }
-
+                else if (rayDirection.hit.collider.tag == ("WallBlock"))
+                {
+                    Gizmos.color = Color.black;
+                                      
+                }
+                rayDirection.isHit = true;
+                Gizmos.DrawLine(transform.position, rayDirection.hit.point);
             }
-            else if (hit.collider.tag == ("WallBlock"))
-            {
 
-            }
-
-            Gizmos.DrawLine(transform.position, hit.transform.position);
+        
+        
         }
     }
 
     [System.Serializable]
-    public class HitDirectionPosition
+    public class HitDirection
     {
+        public Vector3 direction;
+        public RaycastHit2D hit;
         public Vector2 targetPosition;
         public float distance;
+        public bool isPushable;
+        public bool isHit;
+        public bool canMove;
+        public KeyCode input;
     }
 
 
