@@ -6,6 +6,9 @@ TagManager:
   tags:
   - IceBlock
   - WallBlock
+  - StopTile
+  - Button
+  - Door
   layers:
   - Default
   - TransparentFX
