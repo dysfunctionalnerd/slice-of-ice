@@ -11,11 +11,14 @@ public class PlayerMovement : MonoBehaviour
     public Vector3 newPosition;
     public float speed;
 
+    GameManager gameManager;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         speed = .5f;
+        gameManager = FindFirstObjectByType<GameManager>();
         //SetCoordinateStart();
 
         //rigid = GetComponent<Rigidbody2D>();
@@ -71,9 +74,9 @@ public class PlayerMovement : MonoBehaviour
                 rayDirection.canMove = true;
                 rayDirection.isPushable = false;
 
-                if (rayDirection.hit.collider.tag == "WallBlock" || rayDirection.hit.collider.tag == ("IceBlock"))
+                if (rayDirection.hit.collider.tag == "WallBlock" || rayDirection.hit.collider.tag == ("IceBlock") || rayDirection.hit.collider.tag == ("Door"))
                 {
-                    if (rayDirection.distance == 1f)
+                    if (rayDirection.distance == 1f && rayDirection.hit.collider.isTrigger == false)
                     {
                         rayDirection.canMove = false;
 
@@ -97,9 +100,26 @@ public class PlayerMovement : MonoBehaviour
         {
             if (rayDirection.canMove && Input.GetKeyDown(rayDirection.input))
             {
-                if (rayDirection.hit.collider.tag == "StopTile")
+                gameManager.TurnCountUpdate();
+
+                if (rayDirection.hit.collider.tag == "StopTile"  )
                 {
                     newPosition = rayDirection.targetPosition;
+                }
+                else if (rayDirection.hit.collider.tag == "Door")
+                {
+                    if (rayDirection.hit.collider.isTrigger)
+                    {
+                        newPosition = rayDirection.targetPosition;
+                    }
+                    else
+                    {
+                     newPosition = new Vector3(
+                     rayDirection.targetPosition.x - rayDirection.direction.x,
+                     rayDirection.targetPosition.y - rayDirection.direction.y,
+                     0
+                     );
+                    }
                 }
                 else
                 {
@@ -114,7 +134,7 @@ public class PlayerMovement : MonoBehaviour
             }
             else if (rayDirection.isPushable == true && isMoving == false && Input.GetKeyDown(rayDirection.input))
             {
-                rayDirection.hit.collider.gameObject.GetComponent<IceBlock>().CheckMovement(rayDirection.direction);
+                    rayDirection.hit.collider.gameObject.GetComponent<IceBlock>().CheckMovement(rayDirection.direction);
             }
         }
 

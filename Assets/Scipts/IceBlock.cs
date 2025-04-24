@@ -10,13 +10,13 @@ public class IceBlock : MonoBehaviour
     public float speed;
     public float distance;
 
-
+    public GameManager manager;
 
 
 // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-
+        manager = FindFirstObjectByType<GameManager>();
     }
 
     // Update is called once per frame
@@ -71,6 +71,11 @@ public class IceBlock : MonoBehaviour
                 {
                     isMoving = false;
                 }
+            }
+
+            if (isMoving)
+            {
+                manager.TurnCountUpdate();
             }
         }
 
